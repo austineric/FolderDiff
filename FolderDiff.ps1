@@ -20,9 +20,10 @@ $Folder2Path=""
 $Folder1FileList=[System.Collections.Generic.List[File]]::new()
 $Folder2FileList=[System.Collections.Generic.List[File]]::new()
 $FileComparisonList=[System.Collections.Generic.List[FileComparison]]::new()
+$FilesToOpen=[string]::new()
 
 #folder 1
-(Get-ChildItem -Path $Folder1Path -Recurse -Attributes !Directory) | ForEach-Object {
+(Get-ChildItem -Path $Folder1Path -Recurse -Attributes !Directory | Where-Object { $_.FullName -notlike "*\bin\*" -and $_.FullName -notlike "*\obj\*" }) | ForEach-Object {
     $File=[File]::new()
     $File.RelativeFilePath=$_.FullName.Replace($Folder1Path, "")
     $File.FullFilePath=$_.FullName
@@ -31,7 +32,7 @@ $FileComparisonList=[System.Collections.Generic.List[FileComparison]]::new()
 }
 
 #folder 2
-(Get-ChildItem -Path $Folder2Path -Recurse -Attributes !Directory) | ForEach-Object {
+(Get-ChildItem -Path $Folder2Path -Recurse -Attributes !Directory | Where-Object { $_.FullName -notlike "*\bin\*" -and $_.FullName -notlike "*\obj\*" }) | ForEach-Object {
     $File=[File]::new()
     $File.RelativeFilePath=$_.FullName.Replace($Folder2Path, "")
     $File.FullFilePath=$_.FullName
@@ -90,7 +91,7 @@ foreach ($Folder1File in $Folder1FileList)
 ($FileComparisonList | Select-Object -Property "Folder1RelativeFilePath", "Folder2RelativeFilePath", "DifferenceExists", "Folder1FullFilePath", "Folder2FullFilePath" | Out-GridView -PassThru) | ForEach-Object {
     if ($_.Folder1FullFilePath -ne "<none>" -and $_.Folder2FullFilePath -ne "<none>")
     {
-        Start-Process "C:/Program Files/Notepad++/notepad++.exe" -ArgumentList "-multiInst `"$($_.Folder1FullFilePath)`" `"$($_.Folder2FullFilePath)`" -nosession"
+        $FilesToOpen+="`"$($_.Folder1FullFilePath)`" `"$($_.Folder2FullFilePath)`""
     }
 }
-
+Start-Process "C:/Program Files/Notepad++/notepad++.exe" -ArgumentList "-multiInst $FilesToOpen -nosession"
